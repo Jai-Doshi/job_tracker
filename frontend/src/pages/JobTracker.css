@@ -1,0 +1,93 @@
+.tracker-container {
+  overflow-x: auto;
+  border-radius: var(--radius-md);
+  margin-top: 1rem;
+}
+
+.tracker-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.tracker-table th,
+.tracker-table td {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.tracker-table th {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.tracker-table tbody tr {
+  transition: background 0.2s ease;
+}
+
+.tracker-table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.tracker-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.table-company-cell {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.mini-logo {
+  width: 36px;
+  height: 36px;
+  background: var(--bg-panel-solid);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  color: var(--text-main);
+  background: linear-gradient(135deg, rgba(79, 70, 229, 0.1), rgba(6, 182, 212, 0.1));
+}
+
+.table-role {
+  font-weight: 500;
+  color: var(--text-main);
+  margin-bottom: 0.1rem;
+}
+
+.table-company {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.table-date,
+.table-notes {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+}
+
+.btn-icon {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: var(--radius-sm);
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-icon:hover {
+  color: var(--text-main);
+  background: rgba(255, 255, 255, 0.1);
+}

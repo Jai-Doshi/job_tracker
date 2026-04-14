@@ -3,7 +3,7 @@ import { Search, MapPin, Briefcase, Filter } from 'lucide-react';
 import './JobSearch.css';
 
 const JobSearch: React.FC = () => {
-  const [searchTerm, setSearchTerm] = useState('react');
+  const [searchTerm, setSearchTerm] = useState('');
   const [location, setLocation] = useState('');
   const [jobs, setJobs] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);

@@ -13,10 +13,10 @@ const JobSearch: React.FC = () => {
     try {
       const qs = new URLSearchParams({ query: searchTerm });
       if (location) qs.append('location', location);
-      
+
       const res = await fetch(`http://127.0.0.1:5000/api/jobs/search?${qs.toString()}`);
       const data = await res.json();
-      if(data.success) {
+      if (data.success) {
         setJobs(data.results);
       }
     } catch (err) {
@@ -44,20 +44,20 @@ const JobSearch: React.FC = () => {
         <div className="search-bar">
           <div className="search-input-wrapper">
             <Search className="input-icon" size={20} />
-            <input 
-              type="text" 
-              className="input-base search-input" 
-              placeholder="Job title, keywords, or company" 
+            <input
+              type="text"
+              className="input-base search-input"
+              placeholder="Job title, keywords, or company"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
           <div className="search-input-wrapper location-wrapper">
             <MapPin className="input-icon" size={20} />
-            <input 
-              type="text" 
-              className="input-base search-input" 
-              placeholder="City, state, or Remote" 
+            <input
+              type="text"
+              className="input-base search-input"
+              placeholder="City, state, or Remote"
               value={location}
               onChange={(e) => setLocation(e.target.value)}
             />
@@ -66,7 +66,7 @@ const JobSearch: React.FC = () => {
             {loading ? "Searching..." : "Find Jobs"}
           </button>
         </div>
-        
+
         <div className="filter-options">
           <button className="btn btn-secondary filter-btn"><Filter size={16} /> Filters</button>
           <div className="quick-filters">
@@ -90,8 +90,8 @@ const JobSearch: React.FC = () => {
                 </div>
               </div>
               <div className="job-tags">
-                <span className="job-tag"><MapPin size={14}/> {job.location}</span>
-                <span className="job-tag"><Briefcase size={14}/> {job.type || 'Full-time'}</span>
+                <span className="job-tag"><MapPin size={14} /> {job.location}</span>
+                <span className="job-tag"><Briefcase size={14} /> {job.type || 'Full-time'}</span>
                 <span className="job-tag amount">{job.salary}</span>
               </div>
               <div className="job-card-footer">

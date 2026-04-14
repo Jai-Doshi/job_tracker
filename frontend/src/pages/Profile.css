@@ -4,12 +4,16 @@
   gap: 1.5rem;
 }
 
-.profile-settings, .preferences-card, .notifications-card {
+.profile-settings,
+.preferences-card,
+.notifications-card {
   padding: 1.5rem;
   margin-bottom: 1.5rem;
 }
 
-.profile-settings h3, .preferences-card h3, .notifications-card h3 {
+.profile-settings h3,
+.preferences-card h3,
+.notifications-card h3 {
   margin-bottom: 1.5rem;
   font-size: 1.2rem;
   border-bottom: 1px solid var(--border-color);

@@ -5,22 +5,39 @@ import './AIResumeAnalyzer.css';
 const AIResumeAnalyzer: React.FC = () => {
   const [analyzing, setAnalyzing] = useState(false);
   const [result, setResult] = useState<null | any>(null);
+  const [jobDesc, setJobDesc] = useState('');
+  const [resumeText, setResumeText] = useState('');
 
-  const handleAnalyze = () => {
+  const handleAnalyze = async () => {
+    if (!jobDesc || !resumeText) {
+      alert("Please provide both a Job Description and a Resume.");
+      return;
+    }
+
     setAnalyzing(true);
-    // Mock API call delay
-    setTimeout(() => {
-      setAnalyzing(false);
-      setResult({
-        matchPercentage: 82,
-        missingKeywords: ['Docker', 'AWS', 'GraphQL', 'CI/CD'],
-        matchedKeywords: ['React', 'TypeScript', 'Node.js', 'Tailwind', 'Git'],
-        suggestions: [
-          'Add a section highlighting your experience with cloud deployments.',
-          'Quantify your impact on previous projects (e.g., "Increased performance by 20%").',
-        ]
+    
+    try {
+      const response = await fetch('http://127.0.0.1:5000/api/ai/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          resume_text: resumeText,
+          job_description: jobDesc
+        })
       });
-    }, 2000);
+
+      const data = await response.json();
+      if (data.success && data.results) {
+        setResult(data.results);
+      } else {
+        alert(data.error || "Failed to analyze resume.");
+      }
+    } catch (error) {
+      console.error("Analysis error:", error);
+      alert("Network error connecting to AI API.");
+    } finally {
+      setAnalyzing(false);
+    }
   };
 
   return (
@@ -42,6 +59,8 @@ const AIResumeAnalyzer: React.FC = () => {
               className="input-base textarea" 
               placeholder="Paste the job description here..."
               rows={6}
+              value={jobDesc}
+              onChange={(e) => setJobDesc(e.target.value)}
             ></textarea>
           </div>
 
@@ -56,6 +75,8 @@ const AIResumeAnalyzer: React.FC = () => {
               className="input-base textarea" 
               placeholder="Or paste your resume text here..."
               rows={4}
+              value={resumeText}
+              onChange={(e) => setResumeText(e.target.value)}
             ></textarea>
           </div>
 

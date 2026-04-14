@@ -1,23 +1,35 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, MapPin, Briefcase, Filter } from 'lucide-react';
 import './JobSearch.css';
 
 const JobSearch: React.FC = () => {
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState('react');
   const [location, setLocation] = useState('');
+  const [jobs, setJobs] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  // Mock API Jobs
-  const mockJobs = [
-    { id: 1, title: 'Senior Frontend Engineer', company: 'TechCorp', location: 'Remote', type: 'Full-time', salary: '$120k - $160k', posted: '2 days ago' },
-    { id: 2, title: 'React Developer', company: 'Innovate AI', location: 'New York, NY', type: 'Full-time', salary: '$100k - $130k', posted: '5 hours ago' },
-    { id: 3, title: 'UI/UX Designer', company: 'DesignStudio', location: 'San Francisco, CA', type: 'Contract', salary: '$80/hr', posted: '1 day ago' },
-    { id: 4, title: 'Full Stack Web Developer', company: 'StartUp Inc.', location: 'Remote', type: 'Full-time', salary: '$110k - $140k', posted: '3 days ago' },
-  ];
+  const fetchJobs = async () => {
+    setLoading(true);
+    try {
+      const qs = new URLSearchParams({ query: searchTerm });
+      if (location) qs.append('location', location);
+      
+      const res = await fetch(`http://127.0.0.1:5000/api/jobs/search?${qs.toString()}`);
+      const data = await res.json();
+      if(data.success) {
+        setJobs(data.results);
+      }
+    } catch (err) {
+      console.error("Failed to fetch jobs from backend", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const filteredJobs = mockJobs.filter(job => 
-    job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    job.company.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Fetch immediately on load if there's a default keyword
+  useEffect(() => {
+    fetchJobs();
+  }, []);
 
   return (
     <div className="job-search animate-fade-in">
@@ -50,7 +62,9 @@ const JobSearch: React.FC = () => {
               onChange={(e) => setLocation(e.target.value)}
             />
           </div>
-          <button className="btn btn-primary search-btn">Find Jobs</button>
+          <button className="btn btn-primary search-btn" onClick={fetchJobs} disabled={loading}>
+            {loading ? "Searching..." : "Find Jobs"}
+          </button>
         </div>
         
         <div className="filter-options">
@@ -64,25 +78,24 @@ const JobSearch: React.FC = () => {
       </section>
 
       <section className="jobs-list">
-        <h2>{filteredJobs.length} Jobs Found</h2>
+        <h2>{jobs.length} Jobs Found across Networks</h2>
         <div className="jobs-grid">
-          {filteredJobs.map(job => (
+          {jobs.map(job => (
             <div key={job.id} className="glass-panel job-card">
               <div className="job-card-header">
-                <div className="company-logo">{job.company.charAt(0)}</div>
+                <div className="company-logo">{job.company.charAt(0).toUpperCase()}</div>
                 <div className="job-title-group">
                   <h3>{job.title}</h3>
-                  <p className="company-name">{job.company}</p>
+                  <p className="company-name">{job.company} &bull; <i>via {job.platform}</i></p>
                 </div>
               </div>
               <div className="job-tags">
                 <span className="job-tag"><MapPin size={14}/> {job.location}</span>
-                <span className="job-tag"><Briefcase size={14}/> {job.type}</span>
+                <span className="job-tag"><Briefcase size={14}/> {job.type || 'Full-time'}</span>
                 <span className="job-tag amount">{job.salary}</span>
               </div>
               <div className="job-card-footer">
-                <span className="posted-time">{job.posted}</span>
-                <button className="btn btn-primary btn-sm">Apply Now</button>
+                <a href={job.apply_url || "#"} target="_blank" rel="noopener noreferrer" className="btn btn-primary btn-sm">Apply Now</a>
               </div>
             </div>
           ))}

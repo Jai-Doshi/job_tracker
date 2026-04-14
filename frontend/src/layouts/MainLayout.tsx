@@ -17,15 +17,17 @@ const MainLayout: React.FC = () => {
       {/* Sidebar Navigation */}
       <nav className="glass-panel sidebar">
         <div className="sidebar-brand">
-          <div className="brand-logo">JT</div>
-          <h2>JobTracker</h2>
+          <div className="brand-logo">JT
+            {/* <img src="" alt="App Icon" /> */}
+          </div>
+          <h2>CareerArc</h2>
         </div>
-        
+
         <ul className="sidebar-nav">
           {navItems.map((item) => (
             <li key={item.path}>
-              <NavLink 
-                to={item.path} 
+              <NavLink
+                to={item.path}
                 className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
               >
                 {item.icon}
@@ -35,15 +37,15 @@ const MainLayout: React.FC = () => {
           ))}
         </ul>
 
-         <div className="sidebar-footer">
-            <div className="user-mini-profile">
-              <div className="avatar">A</div>
-              <div>
-                <p className="user-name">Alex Smith</p>
-                <p className="user-role">Frontend Eng</p>
-              </div>
+        <div className="sidebar-footer">
+          <div className="user-mini-profile">
+            <div className="avatar">A</div>
+            <div>
+              <p className="user-name">Alex Smith</p>
+              <p className="user-role">Frontend Eng</p>
             </div>
-         </div>
+          </div>
+        </div>
       </nav>
 
       {/* Main Content Area */}

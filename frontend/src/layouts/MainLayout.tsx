@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Search, Briefcase, BrainCircuit, User, LogOut } from 'lucide-react';
+import { LayoutDashboard, Search, Briefcase, BrainCircuit, User, LogOut, Crown } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { toast } from 'react-hot-toast';
 import './MainLayout.css';
@@ -79,6 +79,17 @@ const MainLayout: React.FC = () => {
               >
                 {item.icon}
                 <span>{item.name}</span>
+                {item.path === '/ai-analyzer' && (
+                  <Crown
+                    size={16}
+                    style={{
+                      marginLeft: 'auto',
+                      color: '#f59e0b',
+                      filter: 'drop-shadow(0 0 4px rgba(245, 158, 11, 0.6))',
+                      flexShrink: 0,
+                    }}
+                  />
+                )}
               </NavLink>
             </li>
           ))}

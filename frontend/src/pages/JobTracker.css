@@ -135,6 +135,7 @@
     opacity: 0;
     transform: translateY(20px) scale(0.97);
   }
+
   100% {
     opacity: 1;
     transform: translateY(0) scale(1);
@@ -286,8 +287,15 @@ select.input-base option {
 }
 
 @keyframes popIn {
-  0% { transform: scale(0.7); opacity: 0; }
-  100% { transform: scale(1); opacity: 1; }
+  0% {
+    transform: scale(0.7);
+    opacity: 0;
+  }
+
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 .confirm-title {
@@ -333,6 +341,52 @@ select.input-base option {
 }
 
 .btn-danger:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── Header Actions, Search & Pagination ───────────────────── */
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+
+.search-bar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin-top: 18px;
+}
+
+.search-icon {
+  position: absolute;
+  left: 0.75rem;
+  color: var(--text-muted);
+}
+
+.search-input {
+  padding-left: 2.5rem;
+  width: 500px;
+  height: 50px;
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 1.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.page-info {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.pagination .btn-icon:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }

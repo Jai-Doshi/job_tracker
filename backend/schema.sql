@@ -9,6 +9,9 @@ CREATE TABLE applications (
     status TEXT NOT NULL DEFAULT 'Applied',
     notes TEXT,
     applied_date DATE,
+    match_percentage INTEGER,
+    resume_file TEXT,
+    jd_file TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 

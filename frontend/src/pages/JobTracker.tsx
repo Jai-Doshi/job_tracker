@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom';
-import { Plus, Trash2, X, Edit2, AlertTriangle, Search, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, Trash2, X, Edit2, AlertTriangle, Search, ChevronLeft, ChevronRight, Eye, UploadCloud, FileText } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { supabase } from '../lib/supabase';
 import './JobTracker.css';
@@ -12,6 +12,9 @@ interface Application {
   applied_date: string;
   status: string;
   notes: string;
+  match_percentage?: number | string;
+  resume_file?: string;
+  jd_file?: string;
 }
 
 const formatDate = (dateStr: string) => {
@@ -34,16 +37,32 @@ const truncateText = (text: string, maxLength: number = 30) => {
   return text.length > maxLength ? text.substring(0, maxLength) + '......' : text;
 };
 
+const getMatchColor = (percent: number | string | undefined) => {
+  if (percent === undefined || percent === '') return 'transparent';
+  const p = Number(percent);
+  if (isNaN(p)) return 'transparent';
+  if (p >= 90) return '#10B981';
+  if (p >= 80) return '#F97316';
+  if (p >= 70) return '#4F46E5';
+  if (p >= 60) return '#EAB308';
+  if (p >= 40) return '#FFFFFF';
+  return '#EF4444';
+};
+
 const JobTracker: React.FC = () => {
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [currentStep, setCurrentStep] = useState(1);
   const [editingId, setEditingId] = useState<number | null>(null);
-  const [formData, setFormData] = useState({ company: '', role: '', notes: '', status: 'Applied' });
+  const [formData, setFormData] = useState({ company: '', role: '', notes: '', status: 'Applied', match_percentage: '', resume_file: '', jd_file: '' });
 
   // Delete confirmation state
   const [deleteTarget, setDeleteTarget] = useState<Application | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // View Details state
+  const [viewTarget, setViewTarget] = useState<Application | null>(null);
 
   // Search and Pagination
   const [searchQuery, setSearchQuery] = useState('');
@@ -51,15 +70,36 @@ const JobTracker: React.FC = () => {
   const ITEMS_PER_PAGE = 10;
 
   const openCreateModal = () => {
+    setCurrentStep(1);
     setEditingId(null);
-    setFormData({ company: '', role: '', notes: '', status: 'Applied' });
+    setFormData({ company: '', role: '', notes: '', status: 'Applied', match_percentage: '', resume_file: '', jd_file: '' });
     setIsModalOpen(true);
   };
 
   const openEditModal = (app: Application) => {
+    setCurrentStep(1);
     setEditingId(app.id);
-    setFormData({ company: app.company, role: app.role, notes: app.notes, status: app.status });
+    setFormData({
+      company: app.company,
+      role: app.role,
+      notes: app.notes,
+      status: app.status,
+      match_percentage: app.match_percentage?.toString() || '',
+      resume_file: app.resume_file || '',
+      jd_file: app.jd_file || ''
+    });
     setIsModalOpen(true);
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, field: 'resume_file' | 'jd_file') => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData(prev => ({ ...prev, [field]: reader.result as string }));
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const getAuthHeaders = async () => {
@@ -181,69 +221,148 @@ const JobTracker: React.FC = () => {
             </button>
           </div>
 
-          <form onSubmit={handleSave} className="modal-form">
-            <div className="modal-form-row">
-              <div className="input-group">
-                <label htmlFor="company">Company Name</label>
-                <input
-                  id="company"
-                  required
-                  type="text"
-                  className="input-base"
-                  value={formData.company}
-                  onChange={(e) => setFormData({ ...formData, company: e.target.value })}
-                  placeholder="e.g. Google, Tesla..."
-                />
-              </div>
-              <div className="input-group">
-                <label htmlFor="role">Role / Position</label>
-                <input
-                  id="role"
-                  required
-                  type="text"
-                  className="input-base"
-                  value={formData.role}
-                  onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                  placeholder="e.g. Senior Developer"
-                />
-              </div>
-            </div>
+          <form onSubmit={currentStep === 1 ? (e) => { e.preventDefault(); setCurrentStep(2); } : handleSave} className="modal-form">
+            {currentStep === 1 ? (
+              <>
+                <div className="modal-form-row">
+                  <div className="input-group">
+                    <label htmlFor="company">Company Name</label>
+                    <input
+                      id="company"
+                      required
+                      type="text"
+                      className="input-base"
+                      value={formData.company}
+                      onChange={(e) => setFormData({ ...formData, company: e.target.value })}
+                      placeholder="e.g. Google, Tesla..."
+                    />
+                  </div>
+                  <div className="input-group">
+                    <label htmlFor="role">Role / Position</label>
+                    <input
+                      id="role"
+                      required
+                      type="text"
+                      className="input-base"
+                      value={formData.role}
+                      onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+                      placeholder="e.g. Senior Developer"
+                    />
+                  </div>
+                </div>
 
-            <div className="input-group">
-              <label htmlFor="status">Application Status</label>
-              <select
-                id="status"
-                className="input-base"
-                value={formData.status}
-                onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-              >
-                <option value="Applied">🔵 Applied</option>
-                <option value="Interviewing">🟡 Interviewing</option>
-                <option value="Offer">🟢 Offer Received</option>
-                <option value="Rejected">🔴 Rejected</option>
-              </select>
-            </div>
+                <div className="input-group">
+                  <label htmlFor="status">Application Status</label>
+                  <select
+                    id="status"
+                    className="input-base"
+                    value={formData.status}
+                    onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                  >
+                    <option value="Applied">🔵 Applied</option>
+                    <option value="Interviewing">🟡 Interviewing</option>
+                    <option value="Offer">🟢 Offer Received</option>
+                    <option value="Rejected">🔴 Rejected</option>
+                  </select>
+                </div>
 
-            <div className="input-group">
-              <label htmlFor="notes">Notes (Optional)</label>
-              <textarea
-                id="notes"
-                className="input-base textarea"
-                rows={3}
-                value={formData.notes}
-                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                placeholder="Recruiter name, referral, key details..."
-              />
-            </div>
+                <div className="input-group">
+                  <label htmlFor="notes">Notes (Optional)</label>
+                  <textarea
+                    id="notes"
+                    className="input-base textarea"
+                    rows={3}
+                    value={formData.notes}
+                    onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                    placeholder="Recruiter name, referral, key details..."
+                  />
+                </div>
 
-            <div className="modal-actions">
-              <button type="button" className="btn btn-secondary" onClick={() => setIsModalOpen(false)}>
-                Cancel
-              </button>
-              <button type="submit" className="btn btn-primary">
-                {editingId ? 'Update Application' : 'Save Application'}
-              </button>
-            </div>
+                <div className="modal-actions">
+                  <button type="button" className="btn btn-secondary" onClick={() => setIsModalOpen(false)}>
+                    Cancel
+                  </button>
+                  <button type="submit" className="btn btn-primary">
+                    Next: Upload Docs
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="input-group">
+                  <label>Upload Resume (PDF/Docs) - Optional</label>
+                  <div className="upload-zone">
+                    <input
+                      id="resume_file"
+                      type="file"
+                      className="hidden-input"
+                      accept=".pdf,.doc,.docx"
+                      onChange={(e) => handleFileUpload(e, 'resume_file')}
+                    />
+                    <label htmlFor="resume_file" className={`upload-label ${formData.resume_file ? 'has-file' : ''}`}>
+                      {formData.resume_file ? <FileText size={24} className="file-icon" /> : <UploadCloud size={24} className="upload-icon" />}
+                      &nbsp;&nbsp;
+                      <span className="upload-text">
+                        {formData.resume_file ? 'Resume Uploaded (Click to change)' : 'Click to upload Resume'}
+                      </span>
+                    </label>
+                  </div>
+                </div>
+
+                <div className="input-group">
+                  <label>Upload Job Description (PDF/Docs) - Optional</label>
+                  <div className="upload-zone">
+                    <input
+                      id="jd_file"
+                      type="file"
+                      className="hidden-input"
+                      accept=".pdf,.doc,.docx"
+                      onChange={(e) => handleFileUpload(e, 'jd_file')}
+                    />
+                    <label htmlFor="jd_file" className={`upload-label ${formData.jd_file ? 'has-file' : ''}`}>
+                      {formData.jd_file ? <FileText size={24} className="file-icon" /> : <UploadCloud size={24} className="upload-icon" />}
+                      &nbsp;&nbsp;
+                      <span className="upload-text">
+                        {formData.jd_file ? 'JD Uploaded (Click to change)' : 'Click to upload Job Description'}
+                      </span>
+                    </label>
+                  </div>
+                </div>
+
+                <div className="input-group" style={{ flexDirection: 'row', alignItems: 'flex-end', gap: '1rem' }}>
+                  <div style={{ flex: 1 }}>
+                    <label htmlFor="match_percentage">Match Percentage (%)</label>
+                    <input
+                      id="match_percentage"
+                      type="number"
+                      min="0"
+                      max="100"
+                      className="input-base"
+                      value={formData.match_percentage}
+                      onChange={(e) => setFormData({ ...formData, match_percentage: e.target.value })}
+                      placeholder="e.g. 85"
+                    />
+                  </div>
+                  <button type="button" className="btn btn-secondary" onClick={() => toast('Analyze functionality coming soon!', { icon: '🔮' })}>
+                    Analyze
+                  </button>
+                </div>
+
+                <div className="modal-actions" style={{ justifyContent: 'space-between' }}>
+                  <button type="button" className="btn btn-secondary" onClick={() => setCurrentStep(1)}>
+                    Back
+                  </button>
+                  <div style={{ display: 'flex', gap: '0.75rem' }}>
+                    <button type="button" className="btn btn-secondary" onClick={() => setIsModalOpen(false)}>
+                      Cancel
+                    </button>
+                    <button type="submit" className="btn btn-primary">
+                      {editingId ? 'Update Application' : 'Save Application'}
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
           </form>
         </div>
       </div>,
@@ -343,7 +462,23 @@ const JobTracker: React.FC = () => {
                     <tr key={app.id}>
                       <td>
                         <div className="table-company-cell">
-                          <div className="mini-logo">{app.company.charAt(0).toUpperCase()}</div>
+                          <div style={{ position: 'relative', width: '42px', height: '42px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <svg width="42" height="42" style={{ position: 'absolute', top: 0, left: 0, transform: 'rotate(-90deg)' }}>
+                              <circle cx="21" cy="21" r="19" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="2" />
+                              <circle
+                                cx="21" cy="21" r="19"
+                                fill="none"
+                                stroke={getMatchColor(app.match_percentage)}
+                                strokeWidth="2"
+                                strokeDasharray={2 * Math.PI * 19}
+                                strokeDashoffset={2 * Math.PI * 19 * (1 - (Number(app.match_percentage || 0) / 100))}
+                                strokeLinecap="round"
+                              />
+                            </svg>
+                            <div className="mini-logo" style={{ margin: 0, width: '32px', height: '32px', borderRadius: '50%', zIndex: 1 }}>
+                              {app.company.charAt(0).toUpperCase()}
+                            </div>
+                          </div>
                           <div>
                             <div className="table-role">{app.role}</div>
                             <div className="table-company">{app.company}</div>
@@ -363,6 +498,13 @@ const JobTracker: React.FC = () => {
                       <td className="table-notes" title={app.notes}>{truncateText(app.notes, 30)}</td>
                       <td>
                         <div style={{ display: 'flex', gap: '0.5rem' }}>
+                          <button
+                            className="btn-icon"
+                            onClick={() => setViewTarget(app)}
+                            title="View Details"
+                          >
+                            <Eye size={16} />
+                          </button>
                           <button
                             className="btn-icon"
                             onClick={() => openEditModal(app)}
@@ -412,6 +554,85 @@ const JobTracker: React.FC = () => {
 
       {formModal}
       {deleteModal}
+
+      {/* ── View Details Modal ─────────────────────────────────────────── */}
+      {viewTarget && ReactDOM.createPortal(
+        <div className="modal-overlay" onClick={() => setViewTarget(null)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <div className="modal-header-left">
+                <div className="modal-icon">
+                  <Eye size={18} />
+                </div>
+                <h2>Application Details</h2>
+              </div>
+              <button className="modal-close-btn" onClick={() => setViewTarget(null)} title="Close">
+                <X size={18} />
+              </button>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <div>
+                  <div style={{ fontSize: '1.2rem', fontWeight: '600', color: 'var(--text-main)' }}>{viewTarget.role}</div>
+                  <div style={{ color: 'var(--text-muted)' }}>{viewTarget.company}</div>
+                </div>
+                <div>
+                  <span className={`badge badge-${viewTarget.status.toLowerCase().replace('interviewing', 'interview')}`}>
+                    {viewTarget.status}
+                  </span>
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', background: 'rgba(0,0,0,0.2)', padding: '1rem', borderRadius: '8px' }}>
+                <div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '4px' }}>Date Applied</div>
+                  <div>{formatDate(viewTarget.applied_date)}</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '4px' }}>Match Percentage</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div style={{ width: '12px', height: '12px', borderRadius: '50%', backgroundColor: getMatchColor(viewTarget.match_percentage) }}></div>
+                    <span>{viewTarget.match_percentage ? `${viewTarget.match_percentage}%` : 'N/A'}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '8px' }}>Notes</div>
+                <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1rem', borderRadius: '8px', minHeight: '60px', color: 'var(--text-main)' }}>
+                  {viewTarget.notes || 'No notes provided.'}
+                </div>
+              </div>
+
+              {(viewTarget.resume_file || viewTarget.jd_file) && (
+                <div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '8px' }}>Attached Documents</div>
+                  <div style={{ display: 'flex', gap: '1rem' }}>
+                    {viewTarget.resume_file && (
+                      <a href={viewTarget.resume_file} download="Resume" className="btn btn-secondary" style={{ fontSize: '0.85rem', padding: '0.5rem 1rem' }}>
+                        Download Resume
+                      </a>
+                    )}
+                    {viewTarget.jd_file && (
+                      <a href={viewTarget.jd_file} download="Job_Description" className="btn btn-secondary" style={{ fontSize: '0.85rem', padding: '0.5rem 1rem' }}>
+                        Download JD
+                      </a>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="modal-actions" style={{ marginTop: '1.5rem' }}>
+              <button className="btn btn-primary" onClick={() => setViewTarget(null)}>
+                Done
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
     </>
   );
 };

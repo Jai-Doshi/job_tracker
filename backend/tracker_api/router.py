@@ -56,6 +56,13 @@ def create_application():
         "applied_date": data.get("applied_date", datetime.now().strftime("%Y-%m-%d"))
     }
     
+    if "match_percentage" in data:
+        new_app["match_percentage"] = data["match_percentage"]
+    if "resume_file" in data:
+        new_app["resume_file"] = data["resume_file"]
+    if "jd_file" in data:
+        new_app["jd_file"] = data["jd_file"]
+    
     try:
         response = scoped.table(TABLE_NAME).insert(new_app).execute()
         return jsonify({"success": True, "data": response.data[0]})

@@ -12,6 +12,7 @@ CREATE TABLE applications (
     match_percentage INTEGER,
     resume_file TEXT,
     jd_file TEXT,
+    timeline JSONB DEFAULT '[]'::jsonb,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 

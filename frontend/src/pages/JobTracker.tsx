@@ -15,6 +15,8 @@ interface Application {
   match_percentage?: number | string;
   resume_file?: string;
   jd_file?: string;
+  timeline?: { status: string; date: string }[];
+  created_at?: string;
 }
 
 const formatDate = (dateStr: string) => {
@@ -145,12 +147,21 @@ const JobTracker: React.FC = () => {
     const loadingToast = toast.loading('Saving application...');
     try {
       const headers = await getAuthHeaders();
+      let payload: any = { ...formData };
 
       if (editingId) {
+        const existingApp = applications.find(a => a.id === editingId);
+        if (existingApp && existingApp.status !== formData.status) {
+          const currentTimeline = existingApp.timeline || [{ status: existingApp.status, date: existingApp.created_at || new Date().toISOString() }];
+          payload.timeline = [...currentTimeline, { status: formData.status, date: new Date().toISOString() }];
+        } else {
+          payload.timeline = existingApp?.timeline || [{ status: formData.status, date: existingApp?.created_at || new Date().toISOString() }];
+        }
+
         const res = await fetch(`http://127.0.0.1:5000/api/tracker/${editingId}`, {
           method: 'PUT',
           headers,
-          body: JSON.stringify(formData),
+          body: JSON.stringify(payload),
         });
         const data = await res.json();
         if (data.success) {
@@ -161,10 +172,11 @@ const JobTracker: React.FC = () => {
           toast.error(data.error || 'Failed to update application', { id: loadingToast });
         }
       } else {
+        payload.timeline = [{ status: formData.status, date: new Date().toISOString() }];
         const res = await fetch('http://127.0.0.1:5000/api/tracker/', {
           method: 'POST',
           headers,
-          body: JSON.stringify(formData),
+          body: JSON.stringify(payload),
         });
         const data = await res.json();
         if (data.success) {
@@ -260,6 +272,7 @@ const JobTracker: React.FC = () => {
                     onChange={(e) => setFormData({ ...formData, status: e.target.value })}
                   >
                     <option value="Applied">🔵 Applied</option>
+                    <option value="Reviewed">🟣 Reviewed</option>
                     <option value="Interviewing">🟡 Interviewing</option>
                     <option value="Offer">🟢 Offer Received</option>
                     <option value="Rejected">🔴 Rejected</option>
@@ -600,8 +613,28 @@ const JobTracker: React.FC = () => {
 
               <div>
                 <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '8px' }}>Notes</div>
-                <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1rem', borderRadius: '8px', minHeight: '60px', color: 'var(--text-main)' }}>
+                <div className='notes-display' style={{ background: 'rgba(255,255,255,0.03)', padding: '1rem', borderRadius: '8px', minHeight: '60px', color: 'var(--text-main)' }}>
                   {viewTarget.notes || 'No notes provided.'}
+                </div>
+              </div>
+
+              <div style={{ marginTop: '0.5rem' }}>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '8px' }}>Timeline</div>
+                <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1rem', borderRadius: '8px' }}>
+                  {viewTarget.timeline && viewTarget.timeline.length > 0 ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                      {viewTarget.timeline.map((event, idx) => (
+                        <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <span style={{ fontSize: '0.85rem', color: 'var(--text-main)' }}>
+                            Changed to <span style={{ marginLeft: '4px' }} className={`badge badge-${event.status.toLowerCase().replace('interviewing', 'interview')}`}>{event.status}</span>
+                          </span>
+                          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{formatDate(event.date)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>No timeline data available.</div>
+                  )}
                 </div>
               </div>
 

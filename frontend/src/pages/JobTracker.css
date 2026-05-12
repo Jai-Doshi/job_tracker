@@ -260,6 +260,11 @@ select.input-base option {
   color: var(--text-main);
 }
 
+.notes-display {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
 /* ── Delete Confirmation Modal ───────────────────────────── */
 .confirm-modal {
   max-width: 420px;

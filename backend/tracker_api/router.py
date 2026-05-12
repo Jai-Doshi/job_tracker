@@ -63,6 +63,11 @@ def create_application():
     if "jd_file" in data:
         new_app["jd_file"] = data["jd_file"]
     
+    if "timeline" in data:
+        new_app["timeline"] = data["timeline"]
+    else:
+        new_app["timeline"] = [{"status": data.get("status", "Applied"), "date": datetime.now().isoformat()}]
+    
     try:
         response = scoped.table(TABLE_NAME).insert(new_app).execute()
         return jsonify({"success": True, "data": response.data[0]})

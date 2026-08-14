@@ -1,15 +1,11 @@
 ---
-title: CareerArc
-emoji: 💼
+title: Careerarc
+emoji: 🚀
 colorFrom: indigo
-colorTo: blue
+colorTo: purple
 sdk: gradio
+sdk_version: 4.44.0
+suggested_hardware: cpu-basic
 app_file: app.py
 pinned: false
 ---
-
-# CareerArc Backend API
-
-This is the Flask backend API for CareerArc, hosted on Hugging Face Spaces using the Gradio Python runner.
-
-The entry point is `app.py`. The requirements are specified in `requirements.txt`.

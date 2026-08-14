@@ -1,14 +1,21 @@
 import os
 import sys
 
-# 1. ZeroGPU compatibility
-try:
-    import spaces  # type: ignore
-    @spaces.GPU
-    def dummy_gpu_func():
-        pass
-except (ImportError, Exception):
+# 1. Mock spaces locally to prevent ImportError during local runs on non-GPU hardware
+if not os.environ.get("SPACE_ID"):
+    from types import ModuleType
+    mock_spaces = ModuleType("spaces")
+    def dummy_decorator(func):
+        return func
+    mock_spaces.GPU = dummy_decorator  # type: ignore
+    sys.modules["spaces"] = mock_spaces
+
+import spaces  # type: ignore
+
+@spaces.GPU
+def dummy_gpu_func():
     pass
+
 
 from fastapi import FastAPI
 from fastapi.middleware.wsgi import WSGIMiddleware

@@ -8,6 +8,7 @@ CREATE TABLE applications (
     role TEXT NOT NULL,
     status TEXT NOT NULL DEFAULT 'Applied',
     notes TEXT,
+    location TEXT,
     applied_date DATE,
     match_percentage INTEGER,
     resume_file TEXT,

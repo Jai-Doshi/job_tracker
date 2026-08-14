@@ -53,7 +53,8 @@ def create_application():
         "role": data.get("role"),
         "status": data.get("status", "Applied"),
         "notes": data.get("notes", ""),
-        "applied_date": data.get("applied_date", datetime.now().strftime("%Y-%m-%d"))
+        "applied_date": data.get("applied_date", datetime.now().strftime("%Y-%m-%d")),
+        "location": data.get("location", "")
     }
     
     if "match_percentage" in data:

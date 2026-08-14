@@ -12,6 +12,7 @@ interface Application {
   applied_date: string;
   status: string;
   notes: string;
+  location?: string;
   created_at: string;
 }
 
@@ -155,7 +156,7 @@ const Dashboard: React.FC = () => {
                   </div>
                   <div className="activity-details">
                     <h4>{job.role}</h4>
-                    <p>{job.company} &bull; {job.applied_date}</p>
+                    <p>{job.company}{job.location ? ` • ${job.location}` : ''} </p>
                   </div>
                   <span className={getBadgeClass(job.status)}>{job.status}</span>
                 </div>

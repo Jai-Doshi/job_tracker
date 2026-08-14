@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom';
-import { Plus, Trash2, X, Edit2, AlertTriangle, Search, ChevronLeft, ChevronRight, Eye, UploadCloud, FileText } from 'lucide-react';
+import { Plus, Trash2, X, Edit2, AlertTriangle, Search, ChevronLeft, ChevronRight, Eye, UploadCloud, FileText, MapPin } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { supabase } from '../lib/supabase';
 import './JobTracker.css';
@@ -12,6 +12,7 @@ interface Application {
   applied_date: string;
   status: string;
   notes: string;
+  location?: string;
   match_percentage?: number | string;
   resume_file?: string;
   jd_file?: string;
@@ -57,7 +58,7 @@ const JobTracker: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const [editingId, setEditingId] = useState<number | null>(null);
-  const [formData, setFormData] = useState({ company: '', role: '', notes: '', status: 'Applied', match_percentage: '', resume_file: '', jd_file: '' });
+  const [formData, setFormData] = useState({ company: '', role: '', notes: '', status: 'Applied', match_percentage: '', resume_file: '', jd_file: '', location: '' });
 
   // Delete confirmation state
   const [deleteTarget, setDeleteTarget] = useState<Application | null>(null);
@@ -74,7 +75,7 @@ const JobTracker: React.FC = () => {
   const openCreateModal = () => {
     setCurrentStep(1);
     setEditingId(null);
-    setFormData({ company: '', role: '', notes: '', status: 'Applied', match_percentage: '', resume_file: '', jd_file: '' });
+    setFormData({ company: '', role: '', notes: '', status: 'Applied', match_percentage: '', resume_file: '', jd_file: '', location: '' });
     setIsModalOpen(true);
   };
 
@@ -88,7 +89,8 @@ const JobTracker: React.FC = () => {
       status: app.status,
       match_percentage: app.match_percentage?.toString() || '',
       resume_file: app.resume_file || '',
-      jd_file: app.jd_file || ''
+      jd_file: app.jd_file || '',
+      location: app.location || ''
     });
     setIsModalOpen(true);
   };
@@ -135,7 +137,8 @@ const JobTracker: React.FC = () => {
 
   const filteredApplications = applications.filter(app =>
     app.company.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    app.role.toLowerCase().includes(searchQuery.toLowerCase())
+    app.role.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (app.location && app.location.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
   const totalPages = Math.ceil(filteredApplications.length / ITEMS_PER_PAGE);
@@ -263,20 +266,33 @@ const JobTracker: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="input-group">
-                  <label htmlFor="status">Application Status</label>
-                  <select
-                    id="status"
-                    className="input-base"
-                    value={formData.status}
-                    onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                  >
-                    <option value="Applied">🔵 Applied</option>
-                    <option value="Reviewed">🟣 Reviewed</option>
-                    <option value="Interviewing">🟡 Interviewing</option>
-                    <option value="Offer">🟢 Offer Received</option>
-                    <option value="Rejected">🔴 Rejected</option>
-                  </select>
+                <div className="modal-form-row">
+                  <div className="input-group">
+                    <label htmlFor="location">Location</label>
+                    <input
+                      id="location"
+                      type="text"
+                      className="input-base"
+                      value={formData.location}
+                      onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                      placeholder="e.g. Remote, Austin, TX..."
+                    />
+                  </div>
+                  <div className="input-group">
+                    <label htmlFor="status">Application Status</label>
+                    <select
+                      id="status"
+                      className="input-base"
+                      value={formData.status}
+                      onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                    >
+                      <option value="Applied">🔵 Applied</option>
+                      <option value="Reviewed">🟣 Reviewed</option>
+                      <option value="Interviewing">🟡 Interviewing</option>
+                      <option value="Offer">🟢 Offer Received</option>
+                      <option value="Rejected">🔴 Rejected</option>
+                    </select>
+                  </div>
                 </div>
 
                 <div className="input-group">
@@ -466,7 +482,7 @@ const JobTracker: React.FC = () => {
                     <th>Company &amp; Role</th>
                     <th>Date Applied</th>
                     <th>Status</th>
-                    <th>Notes</th>
+                    <th>Location</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
@@ -494,7 +510,9 @@ const JobTracker: React.FC = () => {
                           </div>
                           <div>
                             <div className="table-role">{app.role}</div>
-                            <div className="table-company">{app.company}</div>
+                            <div className="table-company">
+                              {app.company}
+                            </div>
                           </div>
                         </div>
                       </td>
@@ -508,7 +526,7 @@ const JobTracker: React.FC = () => {
                           {app.status}
                         </span>
                       </td>
-                      <td className="table-notes" title={app.notes}>{truncateText(app.notes, 30)}</td>
+                      <td className="table-notes" title={app.location}>{truncateText(app.location, 30)}</td>
                       <td>
                         <div style={{ display: 'flex', gap: '0.5rem' }}>
                           <button
@@ -588,7 +606,10 @@ const JobTracker: React.FC = () => {
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <div>
                   <div style={{ fontSize: '1.2rem', fontWeight: '600', color: 'var(--text-main)' }}>{viewTarget.role}</div>
-                  <div style={{ color: 'var(--text-muted)' }}>{viewTarget.company}</div>
+                  <div style={{ color: 'var(--text-muted)' }}>
+                    {viewTarget.company}
+                    <p style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.75rem' }}><MapPin size={12} color='var(--accent)' />{viewTarget.location}</p>
+                  </div>
                 </div>
                 <div>
                   <span className={`badge badge-${viewTarget.status.toLowerCase().replace('interviewing', 'interview')}`}>

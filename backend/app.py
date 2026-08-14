@@ -2,16 +2,15 @@ import os
 import sys
 
 # Mock spaces locally to prevent ImportError during local runs on non-GPU hardware
-try:
-    import spaces  # type: ignore
-except ImportError:
+if not os.environ.get("SPACE_ID"):
     from types import ModuleType
     mock_spaces = ModuleType("spaces")
     def dummy_decorator(func):
         return func
     mock_spaces.GPU = dummy_decorator  # type: ignore
     sys.modules["spaces"] = mock_spaces
-    import spaces  # type: ignore
+
+import spaces  # type: ignore
 
 @spaces.GPU
 def dummy_gpu_func():
@@ -41,6 +40,8 @@ def read_root():
     return jsonify({"message": "Job Tracker API (Flask) is running."})
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 7860))
+    # Default to 7860 on Hugging Face, but 5000 for local development
+    default_port = 7860 if os.environ.get("SPACE_ID") else 5000
+    port = int(os.environ.get("PORT", default_port))
     app.run(host="0.0.0.0", port=port, debug=True)
 

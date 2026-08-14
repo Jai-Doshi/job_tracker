@@ -10,3 +10,6 @@ supabase
 PyJWT
 gunicorn==22.0.0
 websockets>=13.0
+fastapi
+gradio
+uvicorn

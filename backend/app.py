@@ -1,21 +1,20 @@
 import os
 import sys
 
-# Mock spaces locally to prevent ImportError during local runs on non-GPU hardware
-if not os.environ.get("SPACE_ID"):
-    from types import ModuleType
-    mock_spaces = ModuleType("spaces")
-    def dummy_decorator(func):
-        return func
-    mock_spaces.GPU = dummy_decorator  # type: ignore
-    sys.modules["spaces"] = mock_spaces
-
-import spaces  # type: ignore
-
-@spaces.GPU
-def dummy_gpu_func():
+# 1. ZeroGPU compatibility
+try:
+    import spaces  # type: ignore
+    @spaces.GPU
+    def dummy_gpu_func():
+        pass
+except (ImportError, Exception):
     pass
 
+from fastapi import FastAPI
+from fastapi.middleware.wsgi import WSGIMiddleware
+import gradio as gr
+
+# 2. Create the Flask app
 from flask import Flask, jsonify
 from flask_cors import CORS
 from find_jobs.router import jobs_bp
@@ -23,25 +22,46 @@ from ai_analyzer.router import ai_bp
 from tracker_api.router import tracker_bp
 from profile_api import profile_bp
 
-app = Flask(__name__)
+flask_app = Flask(__name__)
 
 # Allow React frontend to access the API
 allowed_origins = os.environ.get("ALLOWED_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173").split(",")
-CORS(app, resources={r"/*": {"origins": allowed_origins}})
+CORS(flask_app, resources={r"/*": {"origins": allowed_origins}})
 
-# Register Blueprints
-app.register_blueprint(jobs_bp, url_prefix="/api/jobs")
-app.register_blueprint(ai_bp, url_prefix="/api/ai")
-app.register_blueprint(tracker_bp, url_prefix="/api/tracker")
-app.register_blueprint(profile_bp, url_prefix="/api/profile")
+# Register Flask Blueprints
+flask_app.register_blueprint(jobs_bp, url_prefix="/api/jobs")
+flask_app.register_blueprint(ai_bp, url_prefix="/api/ai")
+flask_app.register_blueprint(tracker_bp, url_prefix="/api/tracker")
+flask_app.register_blueprint(profile_bp, url_prefix="/api/profile")
 
-@app.route("/", methods=["GET"])
+@flask_app.route("/", methods=["GET"])
 def read_root():
     return jsonify({"message": "Job Tracker API (Flask) is running."})
 
+# 3. Wrap with FastAPI and mount Flask app at the root "/"
+fastapi_app = FastAPI()
+fastapi_app.mount("/", WSGIMiddleware(flask_app))
+
+# 4. Create a basic Gradio interface that Hugging Face expects
+def status_check():
+    return "CareerArc API is active and running!"
+
+demo = gr.Interface(
+    fn=status_check,
+    inputs=[],
+    outputs="text",
+    title="CareerArc API Status",
+    description="This Space hosts the Flask API for CareerArc."
+)
+
+# 5. Mount the Gradio app on FastAPI under "/status"
+# Expose the ASGI app as `app` so Hugging Face and Uvicorn can run it directly
+app = gr.mount_gradio_app(fastapi_app, demo, path="/status")
+
 if __name__ == "__main__":
+    import uvicorn
     # Default to 7860 on Hugging Face, but 5000 for local development
     default_port = 7860 if os.environ.get("SPACE_ID") else 5000
     port = int(os.environ.get("PORT", default_port))
-    app.run(host="0.0.0.0", port=port, debug=True)
+    uvicorn.run("app:app", host="0.0.0.0", port=port, reload=True)
 

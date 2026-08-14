@@ -65,7 +65,7 @@ const MainLayout: React.FC = () => {
       <nav className="glass-panel sidebar">
         <div className="sidebar-brand">
           <div className="brand-logo">
-            <img src="/favicon.png" alt="App Icon" />
+            <img src="/logo.png" alt="App Icon" />
           </div>
           <h2>CareerArc</h2>
         </div>

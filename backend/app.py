@@ -22,6 +22,16 @@ app.register_blueprint(profile_bp, url_prefix="/api/profile")
 def read_root():
     return jsonify({"message": "Job Tracker API (Flask) is running."})
 
+# Dummy function to satisfy HF ZeroGPU startup checks if ZeroGPU hardware is selected
+try:
+    import spaces  # type: ignore
+    @spaces.GPU
+    def dummy_gpu_func():
+        pass
+except (ImportError, Exception):
+    pass
+
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 7860))
     app.run(host="0.0.0.0", port=port, debug=True)
+

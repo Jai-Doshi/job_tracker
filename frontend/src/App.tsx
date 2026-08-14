@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { Toaster, toast } from 'react-hot-toast';
+import { Toaster } from 'react-hot-toast';
 import { supabase } from './lib/supabase';
 import MainLayout from './layouts/MainLayout';
 import Dashboard from './pages/Dashboard';

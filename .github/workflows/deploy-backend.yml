@@ -1,0 +1,42 @@
+name: Sync Backend to Hugging Face Spaces
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/deploy-backend.yml'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Push to Hugging Face
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          # TODO: Replace with your Hugging Face username and Space name
+          HF_USERNAME: "your-username"
+          HF_SPACE_NAME: "your-space-name"
+        run: |
+          git config --global user.email "actions@github.com"
+          git config --global user.name "GitHub Actions"
+          
+          # Create a temporary directory to prepare the HF deployment contents
+          mkdir temp_hf
+          
+          # Copy backend files into the root of the temporary directory
+          cp -r backend/* temp_hf/
+          
+          cd temp_hf
+          git init
+          git checkout -b main
+          git add -A
+          git commit -m "Deploy backend from GitHub Action: ${{ github.sha }}"
+          
+          # Force push to the Hugging Face Space Git repository
+          git push --force https://git:$HF_TOKEN@huggingface.co/spaces/$HF_USERNAME/$HF_SPACE_NAME main

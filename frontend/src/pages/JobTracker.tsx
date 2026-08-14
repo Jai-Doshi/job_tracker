@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom';
 import { Plus, Trash2, X, Edit2, AlertTriangle, Search, ChevronLeft, ChevronRight, Eye, UploadCloud, FileText, MapPin } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { supabase } from '../lib/supabase';
+import { API_BASE_URL } from '../config';
 import './JobTracker.css';
 
 interface Application {
@@ -117,7 +118,7 @@ const JobTracker: React.FC = () => {
   const fetchApplications = async () => {
     try {
       const headers = await getAuthHeaders();
-      const res = await fetch('http://127.0.0.1:5000/api/tracker/', { headers });
+      const res = await fetch(`${API_BASE_URL}/api/tracker/`, { headers });
       const data = await res.json();
       if (data.success) setApplications(data.data);
     } catch {
@@ -161,7 +162,7 @@ const JobTracker: React.FC = () => {
           payload.timeline = existingApp?.timeline || [{ status: formData.status, date: existingApp?.created_at || new Date().toISOString() }];
         }
 
-        const res = await fetch(`http://127.0.0.1:5000/api/tracker/${editingId}`, {
+        const res = await fetch(`${API_BASE_URL}/api/tracker/${editingId}`, {
           method: 'PUT',
           headers,
           body: JSON.stringify(payload),
@@ -176,7 +177,7 @@ const JobTracker: React.FC = () => {
         }
       } else {
         payload.timeline = [{ status: formData.status, date: new Date().toISOString() }];
-        const res = await fetch('http://127.0.0.1:5000/api/tracker/', {
+        const res = await fetch(`${API_BASE_URL}/api/tracker/`, {
           method: 'POST',
           headers,
           body: JSON.stringify(payload),
@@ -200,7 +201,7 @@ const JobTracker: React.FC = () => {
     setIsDeleting(true);
     try {
       const headers = await getAuthHeaders();
-      const res = await fetch(`http://127.0.0.1:5000/api/tracker/${deleteTarget.id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/tracker/${deleteTarget.id}`, {
         method: 'DELETE',
         headers,
       });

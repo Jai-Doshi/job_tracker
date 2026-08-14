@@ -3,6 +3,7 @@ import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, Search, Briefcase, BrainCircuit, User, LogOut, Crown } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { toast } from 'react-hot-toast';
+import { API_BASE_URL } from '../config';
 import './MainLayout.css';
 
 interface ProfileData {
@@ -35,7 +36,7 @@ const MainLayout: React.FC = () => {
           'Authorization': `Bearer ${data.session?.access_token}`
         };
 
-        const res = await fetch('http://127.0.0.1:5000/api/profile/', { headers });
+        const res = await fetch(`${API_BASE_URL}/api/profile/`, { headers });
         const resData = await res.json();
 
         if (resData.success) {

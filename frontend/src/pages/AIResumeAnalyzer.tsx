@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { UploadCloud, Zap, CheckCircle, AlertCircle } from 'lucide-react';
+import { API_BASE_URL } from '../config';
 import './AIResumeAnalyzer.css';
 
 const AIResumeAnalyzer: React.FC = () => {
@@ -17,7 +18,7 @@ const AIResumeAnalyzer: React.FC = () => {
     setAnalyzing(true);
     
     try {
-      const response = await fetch('http://127.0.0.1:5000/api/ai/analyze', {
+      const response = await fetch(`${API_BASE_URL}/api/ai/analyze`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

@@ -8,3 +8,4 @@ google-generativeai
 PyPDF2
 supabase
 PyJWT
+gunicorn==22.0.0

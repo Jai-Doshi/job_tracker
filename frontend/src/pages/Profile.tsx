@@ -3,6 +3,7 @@ import { Save, Bell, BellOff, MapPin, Briefcase, LogOut } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
+import { API_BASE_URL } from '../config';
 import './Profile.css';
 
 interface UserProfile {
@@ -47,7 +48,7 @@ const Profile: React.FC = () => {
         const { data: { user } } = await supabase.auth.getUser();
 
         const headers = await getAuthHeaders();
-        const res = await fetch('http://127.0.0.1:5000/api/profile/', { headers });
+        const res = await fetch(`${API_BASE_URL}/api/profile/`, { headers });
         const resData = await res.json();
 
         if (resData.success) {
@@ -77,7 +78,7 @@ const Profile: React.FC = () => {
     const loadingId = toast.loading("Saving profile...");
     try {
       const headers = await getAuthHeaders();
-      const res = await fetch('http://127.0.0.1:5000/api/profile/', {
+      const res = await fetch(`${API_BASE_URL}/api/profile/`, {
         method: 'PUT',
         headers,
         body: JSON.stringify(profile)

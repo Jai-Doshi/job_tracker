@@ -1,3 +1,4 @@
+import os
 from flask import Flask, jsonify
 from flask_cors import CORS
 from find_jobs.router import jobs_bp
@@ -8,7 +9,8 @@ from profile_api import profile_bp
 app = Flask(__name__)
 
 # Allow React frontend to access the API
-CORS(app, resources={r"/*": {"origins": ["http://localhost:5173", "http://127.0.0.1:5173"]}})
+allowed_origins = os.environ.get("ALLOWED_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173").split(",")
+CORS(app, resources={r"/*": {"origins": allowed_origins}})
 
 # Register Blueprints
 app.register_blueprint(jobs_bp, url_prefix="/api/jobs")
@@ -21,4 +23,5 @@ def read_root():
     return jsonify({"message": "Job Tracker API (Flask) is running."})
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    port = int(os.environ.get("PORT", 7860))
+    app.run(host="0.0.0.0", port=port, debug=True)

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Search, MapPin, Briefcase, Filter } from 'lucide-react';
+import { API_BASE_URL } from '../config';
 import './JobSearch.css';
 
 const JobSearch: React.FC = () => {
@@ -14,7 +15,7 @@ const JobSearch: React.FC = () => {
       const qs = new URLSearchParams({ query: searchTerm });
       if (location) qs.append('location', location);
 
-      const res = await fetch(`http://127.0.0.1:5000/api/jobs/search?${qs.toString()}`);
+      const res = await fetch(`${API_BASE_URL}/api/jobs/search?${qs.toString()}`);
       const data = await res.json();
       if (data.success) {
         setJobs(data.results);

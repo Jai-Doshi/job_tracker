@@ -3,6 +3,7 @@ import { Briefcase, CheckCircle, Clock, XCircle, TrendingUp, Loader2 } from 'luc
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { toast } from 'react-hot-toast';
+import { API_BASE_URL } from '../config';
 import './Dashboard.css';
 
 interface Application {
@@ -28,7 +29,7 @@ const Dashboard: React.FC = () => {
         const token = sessionData.session?.access_token;
         if (!token) return;
 
-        const res = await fetch('http://127.0.0.1:5000/api/tracker/', {
+        const res = await fetch(`${API_BASE_URL}/api/tracker/`, {
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`,

@@ -38,11 +38,7 @@ flask_app.register_blueprint(profile_bp, url_prefix="/api/profile")
 def read_root():
     return jsonify({"message": "Job Tracker API (Flask) is running."})
 
-# 3. Wrap with FastAPI and mount Flask app at the root "/"
-fastapi_app = FastAPI()
-fastapi_app.mount("/", WSGIMiddleware(flask_app))
-
-# 4. Create a basic Gradio interface that Hugging Face expects
+# 3. Create a basic Gradio interface that Hugging Face expects
 def status_check():
     return "CareerArc API is active and running!"
 
@@ -54,14 +50,15 @@ demo = gr.Interface(
     description="This Space hosts the Flask API for CareerArc."
 )
 
-# 5. Mount the Gradio app on FastAPI under "/status"
-# Expose the ASGI app as `app` so Hugging Face and Uvicorn can run it directly
-app = gr.mount_gradio_app(fastapi_app, demo, path="/status")
+# 4. Initialize the Gradio FastAPI app and mount the Flask app at the root "/"
+app = gr.routes.App.create_app(demo)
+app.mount("/", WSGIMiddleware(flask_app))
 
 if __name__ == "__main__":
     import uvicorn
     # Default to 7860 on Hugging Face, but 5000 for local development
     default_port = 7860 if os.environ.get("SPACE_ID") else 5000
     port = int(os.environ.get("PORT", default_port))
-    uvicorn.run("app:app", host="0.0.0.0", port=port, reload=True)
+    # Run the server (reload=False prevents duplicate process port conflicts in container)
+    uvicorn.run(app, host="0.0.0.0", port=port)
 

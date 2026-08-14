@@ -1,4 +1,22 @@
 import os
+import sys
+
+# Mock spaces locally to prevent ImportError during local runs on non-GPU hardware
+try:
+    import spaces  # type: ignore
+except ImportError:
+    from types import ModuleType
+    mock_spaces = ModuleType("spaces")
+    def dummy_decorator(func):
+        return func
+    mock_spaces.GPU = dummy_decorator  # type: ignore
+    sys.modules["spaces"] = mock_spaces
+    import spaces  # type: ignore
+
+@spaces.GPU
+def dummy_gpu_func():
+    pass
+
 from flask import Flask, jsonify
 from flask_cors import CORS
 from find_jobs.router import jobs_bp
@@ -21,15 +39,6 @@ app.register_blueprint(profile_bp, url_prefix="/api/profile")
 @app.route("/", methods=["GET"])
 def read_root():
     return jsonify({"message": "Job Tracker API (Flask) is running."})
-
-# Dummy function to satisfy HF ZeroGPU startup checks if ZeroGPU hardware is selected
-try:
-    import spaces  # type: ignore
-    @spaces.GPU
-    def dummy_gpu_func():
-        pass
-except (ImportError, Exception):
-    pass
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 7860))

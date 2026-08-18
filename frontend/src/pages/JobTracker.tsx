@@ -558,6 +558,83 @@ const JobTracker: React.FC = () => {
                 </tbody>
               </table>
 
+              {/* Mobile Card List (styled in JobTracker.css to display only on smaller screens) */}
+              <div className="tracker-mobile-list">
+                {paginatedApplications.map((app) => (
+                  <div key={app.id} className="tracker-mobile-card glass-panel">
+                    <div className="card-top-row">
+                      <div className="card-brand-section">
+                        <div style={{ position: 'relative', width: '42px', height: '42px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                          <svg width="42" height="42" style={{ position: 'absolute', top: 0, left: 0, transform: 'rotate(-90deg)' }}>
+                            <circle cx="21" cy="21" r="19" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="2" />
+                            <circle
+                              cx="21" cy="21" r="19"
+                              fill="none"
+                              stroke={getMatchColor(app.match_percentage)}
+                              strokeWidth="2"
+                              strokeDasharray={2 * Math.PI * 19}
+                              strokeDashoffset={2 * Math.PI * 19 * (1 - (Number(app.match_percentage || 0) / 100))}
+                              strokeLinecap="round"
+                            />
+                          </svg>
+                          <div className="mini-logo" style={{ margin: 0, width: '32px', height: '32px', borderRadius: '50%', zIndex: 1 }}>
+                            {app.company.charAt(0).toUpperCase()}
+                          </div>
+                        </div>
+                        <div className="card-titles">
+                          <h4 className="card-role">{app.role}</h4>
+                          <span className="card-company">{app.company}</span>
+                        </div>
+                      </div>
+                      <span
+                        className={`badge badge-${app.status
+                          .toLowerCase()
+                          .replace('interviewing', 'interview')}`}
+                      >
+                        {app.status}
+                      </span>
+                    </div>
+
+                    <div className="card-middle-row">
+                      {app.location && (
+                        <div className="card-info-item">
+                          <MapPin size={14} style={{ color: 'var(--text-muted)' }} />
+                          <span>{app.location}</span>
+                        </div>
+                      )}
+                      <div className="card-info-item">
+                        <span className="card-date-label">Applied: {formatDate(app.applied_date)}</span>
+                      </div>
+                    </div>
+
+                    <div className="card-actions-row">
+                      <button
+                        className="btn btn-secondary btn-sm"
+                        onClick={() => setViewTarget(app)}
+                        title="View Details"
+                      >
+                        <Eye size={14} /> View
+                      </button>
+                      <button
+                        className="btn btn-secondary btn-sm"
+                        onClick={() => openEditModal(app)}
+                        title="Edit Application"
+                      >
+                        <Edit2 size={14} /> Edit
+                      </button>
+                      <button
+                        className="btn btn-danger btn-sm"
+                        style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}
+                        onClick={() => setDeleteTarget(app)}
+                        title="Delete Application"
+                      >
+                        <Trash2 size={14} /> Delete
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
               {totalPages > 1 && (
                 <div className="pagination">
                   <button

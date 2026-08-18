@@ -62,7 +62,32 @@ const MainLayout: React.FC = () => {
 
   return (
     <div className="app-layout">
-      {/* Sidebar Navigation */}
+      {/* Mobile Top Header */}
+      <header className="mobile-header glass-panel">
+        <div className="mobile-brand">
+          <div className="brand-logo">
+            <img src="/logo.png" alt="App Icon" />
+          </div>
+          <h2>CareerArc</h2>
+        </div>
+
+        <div className="mobile-header-actions">
+          {profile?.avatar_url ? (
+            <img src={profile.avatar_url} alt="User" className="mobile-avatar" />
+          ) : (
+            <div className="mobile-avatar-initials">{getInitials()}</div>
+          )}
+          <button
+            onClick={handleLogout}
+            className="mobile-logout-btn"
+            title="Sign Out"
+          >
+            <LogOut size={18} />
+          </button>
+        </div>
+      </header>
+
+      {/* Sidebar Navigation (Desktop Only) */}
       <nav className="glass-panel sidebar">
         <div className="sidebar-brand">
           <div className="brand-logo">
@@ -117,16 +142,16 @@ const MainLayout: React.FC = () => {
             <button
               onClick={handleLogout}
               style={{
-                background: 'rgba(239, 68, 68, 0.1)', // Red color with 10% opacity
+                background: 'rgba(239, 68, 68, 0.1)',
                 border: 'none',
-                color: '#ef4444',                    // Matches the red icon color
+                color: '#ef4444',
                 cursor: 'pointer',
-                padding: '0.6rem',                   // Increased padding for a better circle shape
-                borderRadius: '50%',                 // Makes it perfectly circular
-                display: 'flex',                     // Centers the icon inside the circle
+                padding: '0.6rem',
+                borderRadius: '50%',
+                display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                transition: 'background 0.2s'        // Smooth hover effect
+                transition: 'background 0.2s'
               }}
               onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.2)'}
               onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)'}
@@ -142,6 +167,20 @@ const MainLayout: React.FC = () => {
       <main className="main-content">
         <Outlet />
       </main>
+
+      {/* Mobile Bottom Navigation Bar */}
+      <nav className="mobile-bottom-nav glass-panel">
+        {navItems.map((item) => (
+          <NavLink
+            key={item.path}
+            to={item.path}
+            className={({ isActive }) => `mobile-nav-link ${isActive ? 'active' : ''}`}
+          >
+            <div className="mobile-nav-icon">{item.icon}</div>
+            <span className="mobile-nav-label">{item.name}</span>
+          </NavLink>
+        ))}
+      </nav>
     </div>
   );
 };

@@ -400,3 +400,34 @@
 .auth-link:hover {
   color: white;
 }
+
+/* Authentication Mobile Responsive Styles */
+@media (max-width: 480px) {
+  .auth-bg {
+    padding: 1rem;
+  }
+
+  .auth-card {
+    padding: 1.75rem 1.25rem 1.5rem;
+    border-radius: 16px;
+    gap: 1rem;
+  }
+
+  .auth-heading h1 {
+    font-size: 1.4rem;
+  }
+
+  .auth-input-row {
+    border-radius: var(--radius-sm);
+  }
+
+  .auth-input {
+    padding: 0.7rem 0.85rem;
+    font-size: 0.875rem;
+  }
+
+  .auth-btn-primary {
+    padding: 0.75rem;
+    font-size: 0.9rem;
+  }
+}

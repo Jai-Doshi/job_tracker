@@ -131,3 +131,28 @@ select.input-base {
   border-color: var(--status-offer);
   color: var(--status-offer);
 }
+
+/* User Profile Mobile Responsive Styles */
+@media (max-width: 768px) {
+  .profile-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .profile-avatar-section {
+    flex-direction: column;
+    text-align: center;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .save-btn {
+    width: 100%;
+    align-self: stretch;
+  }
+}

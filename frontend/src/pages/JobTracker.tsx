@@ -53,6 +53,157 @@ const getMatchColor = (percent: number | string | undefined) => {
   return '#EF4444';
 };
 
+const getStatusColor = (status: string) => {
+  if (!status) return '#94A3B8';
+  const s = status.toLowerCase();
+  if (s.includes('applied')) return '#3B82F6';
+  if (s.includes('reviewed')) return '#A855F7';
+  if (s.includes('interview')) return '#F59E0B';
+  if (s.includes('offer')) return '#10B981';
+  if (s.includes('rejected')) return '#EF4444';
+  return '#94A3B8';
+};
+
+interface MobileTrackerCardProps {
+  app: Application;
+  onView: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
+  formatDate: (date: string) => string;
+  getMatchColor: (percent: number | string | undefined) => string;
+}
+
+const MobileTrackerCard: React.FC<MobileTrackerCardProps> = ({
+  app,
+  onView,
+  onEdit,
+  onDelete,
+  formatDate,
+  getMatchColor
+}) => {
+  const [startX, setStartX] = useState(0);
+  const [startY, setStartY] = useState(0);
+  const [translation, setTranslation] = useState(0);
+  const [isSwiping, setIsSwiping] = useState(false);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setStartX(e.touches[0].clientX);
+    setStartY(e.touches[0].clientY);
+    setIsSwiping(false);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    const currentX = e.touches[0].clientX;
+    const currentY = e.touches[0].clientY;
+    const diffX = currentX - startX;
+    const diffY = currentY - startY;
+
+    if (!isSwiping) {
+      if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 10) {
+        setIsSwiping(true);
+      }
+    }
+
+    if (isSwiping) {
+      const maxDrag = 120;
+      let targetTranslate = diffX;
+      if (Math.abs(diffX) > maxDrag) {
+        const overDrag = Math.abs(diffX) - maxDrag;
+        targetTranslate = (diffX > 0 ? maxDrag : -maxDrag) + (diffX > 0 ? 1 : -1) * (overDrag * 0.2);
+      }
+      setTranslation(targetTranslate);
+      if (e.cancelable) {
+        e.preventDefault();
+      }
+    }
+  };
+
+  const handleTouchEnd = () => {
+    if (isSwiping) {
+      const threshold = 70;
+      if (translation > threshold) {
+        onDelete();
+      } else if (translation < -threshold) {
+        onEdit();
+      }
+    } else {
+      onView();
+    }
+    setTranslation(0);
+    setIsSwiping(false);
+  };
+
+  const renderSwipeBackground = () => {
+    if (translation > 0) {
+      return (
+        <div className="swipe-bg swipe-bg-delete">
+          <Trash2 size={18} />
+          <span>Delete</span>
+        </div>
+
+      );
+    } else if (translation < 0) {
+      return (
+        <div className="swipe-bg swipe-bg-edit">
+          <span>Edit</span>
+          <Edit2 size={18} />
+        </div>
+      );
+    }
+    return null;
+  };
+
+  return (
+    <div className="mobile-card-wrapper">
+      {renderSwipeBackground()}
+      <div
+        className="tracker-mobile-card glass-panel"
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        style={{
+          transform: `translateX(${translation}px)`,
+          transition: isSwiping ? 'none' : 'transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1)',
+          cursor: 'pointer'
+        }}
+      >
+        <div className="card-top-row" style={{ margin: 0 }}>
+          <div className="card-brand-section">
+            <div style={{ position: 'relative', width: '42px', height: '42px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <svg width="42" height="42" style={{ position: 'absolute', top: 0, left: 0, transform: 'rotate(-90deg)' }}>
+                <circle cx="21" cy="21" r="19" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="2" />
+                <circle
+                  cx="21" cy="21" r="19"
+                  fill="none"
+                  stroke={getMatchColor(app.match_percentage)}
+                  strokeWidth="2"
+                  strokeDasharray={2 * Math.PI * 19}
+                  strokeDashoffset={2 * Math.PI * 19 * (1 - (Number(app.match_percentage || 0) / 100))}
+                  strokeLinecap="round"
+                />
+              </svg>
+              <div className="mini-logo" style={{ margin: 0, width: '32px', height: '32px', borderRadius: '50%', zIndex: 1 }}>
+                {app.company.charAt(0).toUpperCase()}
+              </div>
+            </div>
+            <div className="card-titles">
+              <h4 className="card-role">{app.role}</h4>
+              <span className="card-company">{app.company}</span>
+            </div>
+          </div>
+          <span
+            className={`badge badge-${app.status
+              .toLowerCase()
+              .replace('interviewing', 'interview')}`}
+          >
+            {app.status}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const JobTracker: React.FC = () => {
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
@@ -561,77 +712,15 @@ const JobTracker: React.FC = () => {
               {/* Mobile Card List (styled in JobTracker.css to display only on smaller screens) */}
               <div className="tracker-mobile-list">
                 {paginatedApplications.map((app) => (
-                  <div key={app.id} className="tracker-mobile-card glass-panel">
-                    <div className="card-top-row">
-                      <div className="card-brand-section">
-                        <div style={{ position: 'relative', width: '42px', height: '42px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                          <svg width="42" height="42" style={{ position: 'absolute', top: 0, left: 0, transform: 'rotate(-90deg)' }}>
-                            <circle cx="21" cy="21" r="19" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="2" />
-                            <circle
-                              cx="21" cy="21" r="19"
-                              fill="none"
-                              stroke={getMatchColor(app.match_percentage)}
-                              strokeWidth="2"
-                              strokeDasharray={2 * Math.PI * 19}
-                              strokeDashoffset={2 * Math.PI * 19 * (1 - (Number(app.match_percentage || 0) / 100))}
-                              strokeLinecap="round"
-                            />
-                          </svg>
-                          <div className="mini-logo" style={{ margin: 0, width: '32px', height: '32px', borderRadius: '50%', zIndex: 1 }}>
-                            {app.company.charAt(0).toUpperCase()}
-                          </div>
-                        </div>
-                        <div className="card-titles">
-                          <h4 className="card-role">{app.role}</h4>
-                          <span className="card-company">{app.company}</span>
-                        </div>
-                      </div>
-                      <span
-                        className={`badge badge-${app.status
-                          .toLowerCase()
-                          .replace('interviewing', 'interview')}`}
-                      >
-                        {app.status}
-                      </span>
-                    </div>
-
-                    <div className="card-middle-row">
-                      {app.location && (
-                        <div className="card-info-item">
-                          <MapPin size={14} style={{ color: 'var(--text-muted)' }} />
-                          <span>{app.location}</span>
-                        </div>
-                      )}
-                      <div className="card-info-item">
-                        <span className="card-date-label">Applied: {formatDate(app.applied_date)}</span>
-                      </div>
-                    </div>
-
-                    <div className="card-actions-row">
-                      <button
-                        className="btn btn-secondary btn-sm"
-                        onClick={() => setViewTarget(app)}
-                        title="View Details"
-                      >
-                        <Eye size={14} /> View
-                      </button>
-                      <button
-                        className="btn btn-secondary btn-sm"
-                        onClick={() => openEditModal(app)}
-                        title="Edit Application"
-                      >
-                        <Edit2 size={14} /> Edit
-                      </button>
-                      <button
-                        className="btn btn-danger btn-sm"
-                        style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}
-                        onClick={() => setDeleteTarget(app)}
-                        title="Delete Application"
-                      >
-                        <Trash2 size={14} /> Delete
-                      </button>
-                    </div>
-                  </div>
+                  <MobileTrackerCard
+                    key={app.id}
+                    app={app}
+                    onView={() => setViewTarget(app)}
+                    onEdit={() => openEditModal(app)}
+                    onDelete={() => setDeleteTarget(app)}
+                    formatDate={formatDate}
+                    getMatchColor={getMatchColor}
+                  />
                 ))}
               </div>
 
@@ -718,19 +807,31 @@ const JobTracker: React.FC = () => {
               </div>
 
               <div style={{ marginTop: '0.5rem' }}>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '8px' }}>Timeline</div>
-                <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1rem', borderRadius: '8px' }}>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '12px' }}>Timeline</div>
+                <div className="timeline-container">
                   {viewTarget.timeline && viewTarget.timeline.length > 0 ? (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                      {viewTarget.timeline.map((event, idx) => (
-                        <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <span style={{ fontSize: '0.85rem', color: 'var(--text-main)' }}>
-                            Changed to <span style={{ marginLeft: '4px' }} className={`badge badge-${event.status.toLowerCase().replace('interviewing', 'interview')}`}>{event.status}</span>
-                          </span>
-                          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{formatDate(event.date)}</span>
+                    viewTarget.timeline.map((event, idx) => {
+                      const color = getStatusColor(event.status);
+                      return (
+                        <div key={idx} className="timeline-item">
+                          <div className="timeline-left">
+                            <div className="timeline-dot-outer" style={{
+                              backgroundColor: `${color}15`,
+                              borderColor: `${color}40`
+                            }}>
+                              <div className="timeline-dot-inner" style={{ backgroundColor: color }} />
+                            </div>
+                            {idx < viewTarget.timeline.length - 1 && (
+                              <div className="timeline-line" />
+                            )}
+                          </div>
+                          <div className="timeline-content">
+                            <div className="timeline-status">{event.status}</div>
+                            <div className="timeline-date">Updated on {formatDate(event.date)}</div>
+                          </div>
                         </div>
-                      ))}
-                    </div>
+                      );
+                    })
                   ) : (
                     <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>No timeline data available.</div>
                   )}

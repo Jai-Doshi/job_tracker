@@ -69,7 +69,6 @@ interface MobileTrackerCardProps {
   onView: () => void;
   onEdit: () => void;
   onDelete: () => void;
-  formatDate: (date: string) => string;
   getMatchColor: (percent: number | string | undefined) => string;
 }
 
@@ -78,7 +77,6 @@ const MobileTrackerCard: React.FC<MobileTrackerCardProps> = ({
   onView,
   onEdit,
   onDelete,
-  formatDate,
   getMatchColor
 }) => {
   const [startX, setStartX] = useState(0);
@@ -718,7 +716,6 @@ const JobTracker: React.FC = () => {
                     onView={() => setViewTarget(app)}
                     onEdit={() => openEditModal(app)}
                     onDelete={() => setDeleteTarget(app)}
-                    formatDate={formatDate}
                     getMatchColor={getMatchColor}
                   />
                 ))}

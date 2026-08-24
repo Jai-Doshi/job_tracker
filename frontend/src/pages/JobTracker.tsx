@@ -245,14 +245,34 @@ const JobTracker: React.FC = () => {
     setIsModalOpen(true);
   };
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, field: 'resume_file' | 'jd_file') => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, field: 'resume_file' | 'jd_file') => {
     const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setFormData(prev => ({ ...prev, [field]: reader.result as string }));
-      };
-      reader.readAsDataURL(file);
+    if (!file) return;
+
+    const fileLabel = field === 'resume_file' ? 'Resume' : 'Job Description';
+    const toastId = toast.loading(`Uploading ${fileLabel.toLowerCase()}...`);
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not logged in");
+
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+      const filePath = `${user.id}/${fileName}`;
+      const bucketName = field === 'resume_file' ? 'resumes' : 'jds';
+
+      const { error: uploadError } = await supabase.storage
+        .from(bucketName)
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage.from(bucketName).getPublicUrl(filePath);
+
+      setFormData(prev => ({ ...prev, [field]: data.publicUrl }));
+      toast.success(`${fileLabel} uploaded successfully!`, { id: toastId });
+    } catch (err: any) {
+      toast.error(err.message || `Error uploading ${fileLabel.toLowerCase()}`, { id: toastId });
     }
   };
 
@@ -840,12 +860,12 @@ const JobTracker: React.FC = () => {
                   <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '8px' }}>Attached Documents</div>
                   <div style={{ display: 'flex', gap: '1rem' }}>
                     {viewTarget.resume_file && (
-                      <a href={viewTarget.resume_file} download="Resume" className="btn btn-secondary" style={{ fontSize: '0.85rem', padding: '0.5rem 1rem' }}>
+                      <a href={viewTarget.resume_file} target="_blank" rel="noopener noreferrer" download="Resume" className="btn btn-secondary" style={{ fontSize: '0.85rem', padding: '0.5rem 1rem' }}>
                         Download Resume
                       </a>
                     )}
                     {viewTarget.jd_file && (
-                      <a href={viewTarget.jd_file} download="Job_Description" className="btn btn-secondary" style={{ fontSize: '0.85rem', padding: '0.5rem 1rem' }}>
+                      <a href={viewTarget.jd_file} target="_blank" rel="noopener noreferrer" download="Job_Description" className="btn btn-secondary" style={{ fontSize: '0.85rem', padding: '0.5rem 1rem' }}>
                         Download JD
                       </a>
                     )}
